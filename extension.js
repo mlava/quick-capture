@@ -89,187 +89,187 @@ export default {
         window.roamAlphaAPI.ui.commandPalette.addCommand({
             label: "Import Quick Capture items from Todoist",
             callback: () => importTodoist(),
-        })
-
-        /*
-        const args = {
-            text: 'IMPORTTODOIST',
-            help: "Import Quick Capture items from Todoist",
-            handler: (context) => importTodoistSB,
-        }
-        if (window.roamjs?.extension?.smartblocks) {
-            window.roamjs.extension.smartblocks.registerCommand(args);
-        } else {
-            document.body.addEventListener(
-                `roamjs:smartblocks:loaded`,
-                () =>
-                    window.roamjs?.extension.smartblocks &&
-                    window.roamjs.extension.smartblocks.registerCommand(args)
-            );
-        }
-        */
-
-        const myToken = extensionAPI.settings.get("uqcrr-token");
-        const TodoistAccount = extensionAPI.settings.get("uqcrr-account");
-        const TodoistInboxId = extensionAPI.settings.get("uqcrr-inbox-id");
-        const TodoistImportTag = extensionAPI.settings.get("uqcrr-import-tag");
-        const TodoistHeader = extensionAPI.settings.get("uqcrr-import-header");
-        const TodoistLabelMode = extensionAPI.settings.get("uqcrr-label-mode");
-        const TodoistLabelId = extensionAPI.settings.get("uqcrr-label-id");
-        const TodoistOutputTodo = extensionAPI.settings.get("uqcrr-output-todo");
-        const TodoistGetDescription = extensionAPI.settings.get("uqcrr-get-description");
-        const TodoistNoTag = extensionAPI.settings.get("uqcrr-no-tag") || "False";
-        const TodoistCreatedDate = extensionAPI.settings.get("uqcrr-created-date");
-        const TodoistDueDates = extensionAPI.settings.get("uqcrr-due-dates");
-        const TodoistPriority = extensionAPI.settings.get("uqcrr-priority");
+        });
 
         async function importTodoist() {
-
-            var url = "https://api.todoist.com/rest/v1/tasks?project_id=" + TodoistInboxId + "";
-            if (TodoistLabelMode == "Label") {
-                url += "&label_id=" + TodoistLabelId + "";
-            }
-
-            var bearer = 'Bearer ' + myToken;
-            var myTasks = $.ajax({ url: url, type: "GET", async: false, headers: { Authorization: bearer }, }).responseText;
-            var task;
-
-            let taskList = [];
-            let subTaskList = [];
-            for await (task of JSON.parse(myTasks)) {
-                if (task.hasOwnProperty('parent_id')) {
-                    subTaskList.push({ id: task.id, parent_id: task.parent_id, order: task.order, content: task.content });
-                } else {
-                    taskList.push({ id: task.id, uid: "temp" });
+            if (!extensionAPI.settings.get("uqcrr-token")) {
+                sendConfigAlert();
+            } else if (!extensionAPI.settings.get("uqcrr-account")) {
+                sendConfigAlert();
+            } else if (!extensionAPI.settings.get("uqcrr-inbox-id")) {
+                sendConfigAlert();
+            } else if (!extensionAPI.settings.get("uqcrr-import-tag")) {
+                sendConfigAlert();
+            } else if (!extensionAPI.settings.get("uqcrr-import-header")) {
+                sendConfigAlert();
+            } else if (extensionAPI.settings.get("uqcrr-label-mode") == true) {
+                if (!extensionAPI.settings.get("uqcrr-label-id")) {
+                    sendConfigAlert();
                 }
-            }
+            } else {
+                const myToken = extensionAPI.settings.get("uqcrr-token");
+                const TodoistAccount = extensionAPI.settings.get("uqcrr-account");
+                const TodoistInboxId = extensionAPI.settings.get("uqcrr-inbox-id");
+                const TodoistImportTag = extensionAPI.settings.get("uqcrr-import-tag");
+                const TodoistHeader = extensionAPI.settings.get("uqcrr-import-header");
+                const TodoistLabelMode = extensionAPI.settings.get("uqcrr-label-mode");
+                const TodoistLabelId = extensionAPI.settings.get("uqcrr-label-id");
+                const TodoistOutputTodo = extensionAPI.settings.get("uqcrr-output-todo");
+                const TodoistGetDescription = extensionAPI.settings.get("uqcrr-get-description");
+                const TodoistNoTag = extensionAPI.settings.get("uqcrr-no-tag") || "False";
+                const TodoistCreatedDate = extensionAPI.settings.get("uqcrr-created-date");
+                const TodoistDueDates = extensionAPI.settings.get("uqcrr-due-dates");
+                const TodoistPriority = extensionAPI.settings.get("uqcrr-priority");
 
-            var thisBlock = window.roamAlphaAPI.ui.getFocusedBlock()?.["block-uid"];
-            await window.roamAlphaAPI.updateBlock({
-                block: {
-                    uid: thisBlock,
-                    string: TodoistHeader
+                var url = "https://api.todoist.com/rest/v1/tasks?project_id=" + TodoistInboxId + "";
+                if (TodoistLabelMode == "Label") {
+                    url += "&label_id=" + TodoistLabelId + "";
                 }
-            });
 
-            for (var i = 0; i < taskList.length; i++) {
+                var myHeaders = new Headers();
+                var bearer = 'Bearer ' + myToken;
+                myHeaders.append("Authorization", bearer);
+
+                var requestOptions = {
+                    method: 'GET',
+                    headers: myHeaders,
+                    redirect: 'follow'
+                };
+
+                const response = await fetch(url, requestOptions);
+                const myTasks = await response.text();
+                var task;
+
+                let taskList = [];
+                let subTaskList = [];
                 for await (task of JSON.parse(myTasks)) {
-                    if (taskList[i].id == task.id) {
-                        // print task
-                        var itemString = "";
-                        if (TodoistOutputTodo == true) {
-                            itemString += "{{[[TODO]]}} "
-                        }
-                        itemString += "" + task.content + "";
-                        if (TodoistNoTag !== true) {
-                            itemString += " #[[" + TodoistImportTag + "]]";
-                        }
-                        if (TodoistCreatedDate == true) {
-                            var createdDate = task.created.split("T");
-                            itemString += " Created: [[" + convertToRoamDate(createdDate[0]) + "]]";
-                        }
-                        if (TodoistDueDates == true && task.hasOwnProperty('due')) {
-                            itemString += " Due: [[" + convertToRoamDate(task.due.date) + "]]";
-                        }
-                        if (TodoistPriority == true) {
-                            if (task.priority == "4") {
-                                var priority = "1";
-                            } else if (task.priority == "3") {
-                                var priority = "2";
-                            } else if (task.priority == "2") {
-                                var priority = "3";
-                            } else if (task.priority == "1") {
-                                var priority = "4";
+                    if (task.hasOwnProperty('parent_id')) {
+                        subTaskList.push({ id: task.id, parent_id: task.parent_id, order: task.order, content: task.content });
+                    } else {
+                        taskList.push({ id: task.id, uid: "temp" });
+                    }
+                }
+
+                var thisBlock = window.roamAlphaAPI.ui.getFocusedBlock()?.["block-uid"];
+                await window.roamAlphaAPI.updateBlock({
+                    block: {
+                        uid: thisBlock,
+                        string: TodoistHeader
+                    }
+                });
+
+                for (var i = 0; i < taskList.length; i++) {
+                    for await (task of JSON.parse(myTasks)) {
+                        if (taskList[i].id == task.id) {
+                            // print task
+                            var itemString = "";
+                            if (TodoistOutputTodo == true) {
+                                itemString += "{{[[TODO]]}} "
                             }
-                            itemString += " #Priority-" + priority + "";
-                        }
+                            itemString += "" + task.content + "";
+                            if (TodoistNoTag !== true) {
+                                itemString += " #[[" + TodoistImportTag + "]]";
+                            }
+                            if (TodoistCreatedDate == true) {
+                                var createdDate = task.created.split("T");
+                                itemString += " Created: [[" + convertToRoamDate(createdDate[0]) + "]]";
+                            }
+                            if (TodoistDueDates == true && task.hasOwnProperty('due')) {
+                                itemString += " Due: [[" + convertToRoamDate(task.due.date) + "]]";
+                            }
+                            if (TodoistPriority == true) {
+                                if (task.priority == "4") {
+                                    var priority = "1";
+                                } else if (task.priority == "3") {
+                                    var priority = "2";
+                                } else if (task.priority == "2") {
+                                    var priority = "3";
+                                } else if (task.priority == "1") {
+                                    var priority = "4";
+                                }
+                                itemString += " #Priority-" + priority + "";
+                            }
 
-                        const uid = window.roamAlphaAPI.util.generateUID();
-                        await window.roamAlphaAPI.createBlock({
-                            location: { "parent-uid": thisBlock, order: i },
-                            block: { string: itemString, uid }
-                        });
-
-                        // print description
-                        if (TodoistGetDescription == true && task.description) {
-                            const uid1 = window.roamAlphaAPI.util.generateUID();
+                            const uid = window.roamAlphaAPI.util.generateUID();
                             await window.roamAlphaAPI.createBlock({
-                                location: { "parent-uid": uid, order: 1 },
-                                block: { string: task.description, uid1 }
+                                location: { "parent-uid": thisBlock, order: i },
+                                block: { string: itemString, uid }
                             });
-                        }
 
-                        // print comments
-                        if (task.comment_count > 0) {
-                            var url = "https://api.todoist.com/rest/v1/comments?task_id=" + task.id + "";
-                            var myComments = $.ajax({ url: url, type: "GET", async: false, headers: { Authorization: bearer }, }).responseText;
-                            let commentsJSON = await JSON.parse(myComments);
-                            var commentString = "";
-                            for (var j = 0; j < commentsJSON.length; j++) {
-                                commentString = "";
-                                if (commentsJSON[j].hasOwnProperty('attachment') && TodoistAccount == "Premium") {
-                                    if (commentsJSON[j].attachment.file_type == "application/pdf") {
-                                        commentString = "{{pdf: " + commentsJSON[j].attachment.file_url + "}}";
-                                    } else if (commentsJSON[j].attachment.file_type == "image/jpeg" || commentsJSON[j].attachment.file_type == "image/png") {
-                                        commentString = "![](" + commentsJSON[j].attachment.file_url + ")";
+                            // print description
+                            if (TodoistGetDescription == true && task.description) {
+                                const uid1 = window.roamAlphaAPI.util.generateUID();
+                                await window.roamAlphaAPI.createBlock({
+                                    location: { "parent-uid": uid, order: 1 },
+                                    block: { string: task.description, uid1 }
+                                });
+                            }
+
+                            // print comments
+                            if (task.comment_count > 0) {
+                                var url = "https://api.todoist.com/rest/v1/comments?task_id=" + task.id + "";
+                                const response = await fetch(url, requestOptions);
+                                const myComments = await response.text();
+                                let commentsJSON = await JSON.parse(myComments);
+
+                                var commentString = "";
+                                for (var j = 0; j < commentsJSON.length; j++) {
+                                    commentString = "";
+                                    if (commentsJSON[j].hasOwnProperty('attachment') && TodoistAccount == "Premium") {
+                                        if (commentsJSON[j].attachment.file_type == "application/pdf") {
+                                            commentString = "{{pdf: " + commentsJSON[j].attachment.file_url + "}}";
+                                        } else if (commentsJSON[j].attachment.file_type == "image/jpeg" || commentsJSON[j].attachment.file_type == "image/png") {
+                                            commentString = "![](" + commentsJSON[j].attachment.file_url + ")";
+                                        } else {
+                                            commentString = "" + commentsJSON[j].content + "";
+                                        }
+                                    } else if (commentsJSON[j].hasOwnProperty('attachment')) {
+                                        if (commentsJSON[j].attachment.file_type == "text/html") {
+                                            commentString = "" + commentsJSON[j].content + " [Email Body](" + commentsJSON[j].attachment.file_url + ")";
+                                        }
                                     } else {
                                         commentString = "" + commentsJSON[j].content + "";
                                     }
-                                } else if (commentsJSON[j].hasOwnProperty('attachment')) {
-                                    if (commentsJSON[j].attachment.file_type == "text/html") {
-                                        commentString = "" + commentsJSON[j].content + " [Email Body](" + commentsJSON[j].attachment.file_url + ")";
+
+                                    if (commentString.length > 0) {
+                                        const newBlock = window.roamAlphaAPI.util.generateUID();
+                                        await window.roamAlphaAPI.createBlock({
+                                            location: { "parent-uid": uid, order: j + 1 },
+                                            block: { string: commentString, newBlock }
+                                        });
                                     }
-                                } else {
-                                    commentString = "" + commentsJSON[j].content + "";
+                                }
+                            }
+
+                            // print subtasks
+                            for (var k = 0; k < subTaskList.length; k++) {
+                                let q = `[:find (pull ?page [:block/children]) :where [?page :block/uid "${uid}"]  ]`;
+                                var results = await window.roamAlphaAPI.q(q);
+                                var children = 0;
+                                if (results[0][0]) {
+                                    if (results[0][0].hasOwnProperty('children')) {
+                                        children = results[0][0].children.length;
+                                    }
                                 }
 
-                                if (commentString.length > 0) {
+                                if (subTaskList[k].parent_id == task.id) {
                                     const newBlock = window.roamAlphaAPI.util.generateUID();
                                     await window.roamAlphaAPI.createBlock({
-                                        location: { "parent-uid": uid, order: j + 1 },
-                                        block: { string: commentString, newBlock }
+                                        location: { "parent-uid": uid, order: k + children },
+                                        block: { string: subTaskList[k].content, newBlock }
                                     });
                                 }
                             }
                         }
 
-                        // print subtasks
-                        for (var k = 0; k < subTaskList.length; k++) {
-                            let q = `[:find (pull ?page
-                                [:node/title :block/string :block/uid :block/heading :block/props 
-                                 :entity/attrs :block/open :block/text-align :children/view-type
-                                 :block/order {:block/children ...}
-                                ])
-                             :where [?page :block/uid "${uid}"]  ]`;
-                            var results = await window.roamAlphaAPI.q(q);
-                            var children;
-
-                            if (results[0][0].hasOwnProperty('children')) {
-                                children = results[0][0].children.length;
-                            } else {
-                                children = 0;
-                            }
-
-                            if (subTaskList[k].parent_id == task.id) {
-                                const newBlock = window.roamAlphaAPI.util.generateUID();
-                                await window.roamAlphaAPI.createBlock({
-                                    location: { "parent-uid": uid, order: k + children },
-                                    block: { string: subTaskList[k].content, newBlock }
-                                });
-                            }
-                        }
+                        var url = "https://api.todoist.com/rest/v1/tasks/" + task.id + "";
+                        var requestOptionsDelete = {
+                            method: 'DELETE',
+                            headers: myHeaders,
+                            redirect: 'follow'
+                        };
+                        await fetch(url, requestOptionsDelete);
                     }
-
-                    var url = "https://api.todoist.com/rest/v1/tasks/" + task.id + "";
-                    var settings = {
-                        "url": url,
-                        "method": "DELETE",
-                        "timeout": 0,
-                        "headers": {
-                            "Authorization": bearer
-                        },
-                    };
-                    $.ajax(settings);
                 }
             }
         }
@@ -292,4 +292,8 @@ function convertToRoamDate(dateString) {
         ? "th"
         : ["st", "nd", "rd"][day % 10 - 1];
     return "" + monthName + " " + day + suffix + ", " + year + "";
+}
+
+function sendConfigAlert() {
+    alert("Please set all required configuration settings via the Roam Depot tab.");
 }
