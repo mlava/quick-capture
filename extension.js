@@ -291,7 +291,7 @@ export default {
                                     headers: myHeaders,
                                     redirect: 'follow'
                                 };
-                                //await fetch(url, requestOptionsDelete);
+                                await fetch(url, requestOptionsDelete);
                             }
                         }
                     } else {
