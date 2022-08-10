@@ -92,7 +92,7 @@ export default {
         });
 
         async function importTodoist() {
-            var TodoistAccount, TodoistImportTag, TodoistHeader;
+            var TodoistAccount, TodoistImportTag, TodoistHeader, key;
             breakme: {
                 if (!extensionAPI.settings.get("uqcrr-token")) {
                     key = "API";
@@ -321,7 +321,7 @@ function convertToRoamDate(dateString) {
     return "" + monthName + " " + day + suffix + ", " + year + "";
 }
 
-function sendConfigAlert() {
+function sendConfigAlert(key) {
     if (key == "API") {
         alert("Please set your API token in the configuration settings via the Roam Depot tab.");
     } else if (key == "inboxID") {
