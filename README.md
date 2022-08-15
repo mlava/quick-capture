@@ -13,4 +13,4 @@ Retrieve your Todoist API token:
 Retrieve your Todoist inbox id:
   https://www.loom.com/share/35816b92f0644c088f19c9bb471bd529
 
-More to come.
+Trigger by opening Command Palette (CTRL-P) and then select 'Import Quick Capture items from Todoist'.
