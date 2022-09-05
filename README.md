@@ -4,6 +4,12 @@ Email, voice assistant, apps - they all speak to Todoist. This integration works
 
 Setup is fairly easy, but there are a lot of configuration options so you can achieve fine-grained control of your imports.
 
+**NEW**:
+Automatic import of your Quick Capture items 
+- turn on the switch in Roam Depot configuration settings and enjoy automatic sync of new items in your Todoist inbox. Items will be placed in the daily note page with the tag you configure within the settings. 
+
+Combine automatic import with my upcoming Unread Badge extension to receive a visual prompt that there are new items for you to process!
+
 For details of configuration options:
 https://roamresearch.com/#/app/RoamScripts/page/ZMIPifeIp
 
