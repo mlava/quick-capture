@@ -1,89 +1,108 @@
-const config = {
-    tabTitle: "Universal Quick Capture",
-    settings: [
-        {
-            id: "uqcrr-token",
-            name: "Todoist API Token",
-            description: "Your API token from https://todoist.com/app/settings/integrations",
-            action: { type: "input", placeholder: "Add Todoist API token here" },
-        },
-        {
-            id: "uqcrr-inbox-id",
-            name: "Todoist Inbox ID",
-            description: "Your Todoist inbox id",
-            action: { type: "input", placeholder: "Add inbox id here" },
-        },
-        {
-            id: "uqcrr-account",
-            name: "Todoist Account Type",
-            description: "Free or Premium",
-            action: { type: "input", placeholder: "Free" },
-        },
-        {
-            id: "uqcrr-import-tag",
-            name: "Roam Research Tag",
-            description: "Set this tag in Roam Research on import",
-            action: { type: "input", placeholder: "Quick Capture" },
-        },
-        {
-            id: "uqcrr-import-header",
-            name: "Roam Research Header",
-            description: "Text Header for Roam Research on import",
-            action: { type: "input", placeholder: "Imported Quick Capture items" },
-        },
-        {
-            id: "uqcrr-label-mode",
-            name: "Todoist Label Mode",
-            description: "Only import tasks with a specific label in Todoist",
-            action: { type: "switch" },
-        },
-        {
-            id: "uqcrr-label-id",
-            name: "Todoist Label ID (optional)",
-            description: "Define the Todoist label to import",
-            action: { type: "input", placeholder: "" },
-        },
-        {
-            id: "uqcrr-output-todo",
-            name: "Output as TODO",
-            description: "Import the item as a Roam TODO",
-            action: { type: "switch" },
-        },
-        {
-            id: "uqcrr-get-description",
-            name: "Get Description",
-            description: "Import the item description from Todoist",
-            action: { type: "switch" },
-        },
-        {
-            id: "uqcrr-no-tag",
-            name: "No Tag",
-            description: "Don't apply a tag in Roam Research",
-            action: { type: "switch" },
-        },
-        {
-            id: "uqcrr-created-date",
-            name: "Created Date",
-            description: "Import the item created date",
-            action: { type: "switch" },
-        },
-        {
-            id: "uqcrr-due-dates",
-            name: "Due Dates",
-            description: "Import the item due date",
-            action: { type: "switch" },
-        },
-        {
-            id: "uqcrr-priority",
-            name: "Priority",
-            description: "Import the item priority",
-            action: { type: "switch" },
-        },
-    ]
-};
+var TodoistAccount, TodoistImportTag, TodoistHeader, key, autoParentUid, autoBlockUid;
+var checkInterval = 0;
+var auto = false;
+var autoBlockUidLength = 0;
 
 export default {
     onload: ({ extensionAPI }) => {
+        const config = {
+            tabTitle: "Universal Quick Capture",
+            settings: [
+                {
+                    id: "uqcrr-token",
+                    name: "Todoist API Token",
+                    description: "Your API token from https://todoist.com/app/settings/integrations",
+                    action: { type: "input", placeholder: "Add Todoist API token here" },
+                },
+                {
+                    id: "uqcrr-inbox-id",
+                    name: "Todoist Inbox ID",
+                    description: "Your Todoist inbox id",
+                    action: { type: "input", placeholder: "Add inbox id here" },
+                },
+                {
+                    id: "uqcrr-auto",
+                    name: "Automatic Download",
+                    description: "Import items to the DNP automatically",
+                    action: {
+                        type: "switch",
+                        onChange: (evt) => { setAuto(evt); }
+                    },
+                },
+                {
+                    id: "uqcrr-auto-time",
+                    name: "Automatic Download interval",
+                    description: "Frequency in minutes to check for new items",
+                    action: { type: "input", placeholder: "15" },
+                },
+                {
+                    id: "uqcrr-account",
+                    name: "Todoist Account Type",
+                    description: "Free or Premium",
+                    action: { type: "input", placeholder: "Free" },
+                },
+                {
+                    id: "uqcrr-import-tag",
+                    name: "Roam Research Tag",
+                    description: "Set this tag in Roam Research on import",
+                    action: { type: "input", placeholder: "Quick Capture" },
+                },
+                {
+                    id: "uqcrr-import-header",
+                    name: "Roam Research Header",
+                    description: "Text Header for Roam Research on import",
+                    action: { type: "input", placeholder: "Imported Quick Capture items" },
+                },
+                {
+                    id: "uqcrr-label-mode",
+                    name: "Todoist Label Mode",
+                    description: "Only import tasks with a specific label in Todoist",
+                    action: { type: "switch" },
+                },
+                {
+                    id: "uqcrr-label-id",
+                    name: "Todoist Label ID (optional)",
+                    description: "Define the Todoist label to import",
+                    action: { type: "input", placeholder: "" },
+                },
+                {
+                    id: "uqcrr-output-todo",
+                    name: "Output as TODO",
+                    description: "Import the item as a Roam TODO",
+                    action: { type: "switch" },
+                },
+                {
+                    id: "uqcrr-get-description",
+                    name: "Get Description",
+                    description: "Import the item description from Todoist",
+                    action: { type: "switch" },
+                },
+                {
+                    id: "uqcrr-no-tag",
+                    name: "No Tag",
+                    description: "Don't apply a tag in Roam Research",
+                    action: { type: "switch" },
+                },
+                {
+                    id: "uqcrr-created-date",
+                    name: "Created Date",
+                    description: "Import the item created date",
+                    action: { type: "switch" },
+                },
+                {
+                    id: "uqcrr-due-dates",
+                    name: "Due Dates",
+                    description: "Import the item due date",
+                    action: { type: "switch" },
+                },
+                {
+                    id: "uqcrr-priority",
+                    name: "Priority",
+                    description: "Import the item priority",
+                    action: { type: "switch" },
+                },
+            ]
+        };
         extensionAPI.settings.panel.create(config);
 
         window.roamAlphaAPI.ui.commandPalette.addCommand({
@@ -91,8 +110,22 @@ export default {
             callback: () => importTodoist(),
         });
 
-        async function importTodoist() {
-            var TodoistAccount, TodoistImportTag, TodoistHeader, key;
+        async function setAuto(evt) { // onchange
+            if (evt.target.checked) {
+                auto = true;
+                autoDL();
+            } else {
+                auto = false;
+                if (checkInterval > 0) clearInterval(checkInterval);
+            }
+        }
+
+        if (extensionAPI.settings.get("uqcrr-auto") == true) { // onload
+            auto = true;
+            autoDL();
+        }
+
+        async function importTodoist(auto) {
             breakme: {
                 if (!extensionAPI.settings.get("uqcrr-token")) {
                     key = "API";
@@ -107,7 +140,6 @@ export default {
                     const TodoistInboxId = extensionAPI.settings.get("uqcrr-inbox-id");
                     if (!extensionAPI.settings.get("uqcrr-account")) {
                         TodoistAccount = "Free";
-                        console.log("TodoistAccount set to default");
                     } else {
                         const regex = /^Free|Premium$/;
                         if (extensionAPI.settings.get("uqcrr-account").match(regex)) {
@@ -120,13 +152,11 @@ export default {
                     }
                     if (!extensionAPI.settings.get("uqcrr-import-tag")) {
                         TodoistImportTag = "Quick Capture";
-                        console.log("TodoistImportTag set to default");
                     } else {
                         TodoistImportTag = extensionAPI.settings.get("uqcrr-import-tag");
                     }
                     if (!extensionAPI.settings.get("uqcrr-import-header")) {
                         TodoistHeader = "Imported Quick Capture items:";
-                        console.log("TodoistHeader set to default");
                     } else {
                         TodoistHeader = extensionAPI.settings.get("uqcrr-import-header");
                     }
@@ -176,13 +206,42 @@ export default {
                     }
 
                     if (Object.keys(taskList).length > 0) {
-                        var thisBlock = window.roamAlphaAPI.ui.getFocusedBlock()?.["block-uid"];
-                        await window.roamAlphaAPI.updateBlock({
-                            block: {
-                                uid: thisBlock,
-                                string: TodoistHeader
+                        if (!auto) {
+                            var thisBlock = window.roamAlphaAPI.ui.getFocusedBlock()?.["block-uid"];
+                            await window.roamAlphaAPI.updateBlock({
+                                block: {
+                                    uid: thisBlock,
+                                    string: TodoistHeader
+                                }
+                            });
+                        } else {
+                            // get today's DNP uid
+                            var today = new Date();
+                            var dd = String(today.getDate()).padStart(2, '0');
+                            var mm = String(today.getMonth() + 1).padStart(2, '0');
+                            var yyyy = today.getFullYear();
+                            autoParentUid = mm + '-' + dd + '-' + yyyy;
+                            // find QC header
+                            var results = await window.roamAlphaAPI.q(`[:find (pull ?page [:node/title :block/string :block/uid {:block/children ...} ]) :where [?page :block/uid "${autoParentUid}"] ]`);
+                            if (results[0][0].hasOwnProperty("children") && results[0][0].children.length > 0) {
+                                for (var i = 0; i < results[0][0].children.length; i++) {
+                                    if (results[0][0].children[i].string == TodoistHeader) {
+                                        var definitions = results[0][0]?.children[i];
+                                        autoBlockUid = definitions.uid;
+                                    }
+                                }
+                                if (definitions.hasOwnProperty("children") && definitions.children.length > 0) {
+                                    autoBlockUidLength = definitions.children.length;
+                                }
+                            } else { // there isn't a QC header on this date yet, so create one
+                                const uid = window.roamAlphaAPI.util.generateUID();
+                                await window.roamAlphaAPI.createBlock({
+                                    location: { "parent-uid": autoParentUid, order: 9999 },
+                                    block: { string: TodoistHeader, uid }
+                                });
+                                autoBlockUid = uid;
                             }
-                        });
+                        }
 
                         for (var i = 0; i < taskList.length; i++) {
                             for await (task of JSON.parse(myTasks)) {
@@ -217,10 +276,17 @@ export default {
                                     }
 
                                     const uid = window.roamAlphaAPI.util.generateUID();
-                                    await window.roamAlphaAPI.createBlock({
-                                        location: { "parent-uid": thisBlock, order: i },
-                                        block: { string: itemString, uid }
-                                    });
+                                    if (!auto) {
+                                        await window.roamAlphaAPI.createBlock({
+                                            location: { "parent-uid": thisBlock, order: i },
+                                            block: { string: itemString, uid }
+                                        });
+                                    } else {
+                                        await window.roamAlphaAPI.createBlock({
+                                            location: { "parent-uid": autoBlockUid, order: i+autoBlockUidLength },
+                                            block: { string: itemString, uid }
+                                        });
+                                    }
 
                                     // print description
                                     if (TodoistGetDescription == true && task.description) {
@@ -263,6 +329,7 @@ export default {
                                                     location: { "parent-uid": uid, order: j + 1 },
                                                     block: { string: commentString, newBlock }
                                                 });
+
                                             }
                                         }
                                     }
@@ -295,16 +362,30 @@ export default {
                             }
                         }
                     } else {
-                        alert("No items to import");
+                        if (!auto) {
+                            alert("No items to import");
+                        }
                     }
                 }
             }
+        }
+
+        async function autoDL() {
+            var checkEveryMinutes = extensionAPI.settings.get("uqcrr-auto-time");
+            setTimeout(async () => {
+                await importTodoist(auto);
+                try { if (checkInterval > 0) clearInterval(checkInterval) } catch (e) { }
+                checkInterval = setInterval(async () => {
+                    await importTodoist(auto)
+                }, checkEveryMinutes * 60000);
+            }, 10000)
         }
     },
     onunload: () => {
         window.roamAlphaAPI.ui.commandPalette.removeCommand({
             label: 'Import Quick Capture items from Todoist'
         });
+        if (checkInterval > 0) clearInterval(checkInterval);
     }
 }
 
