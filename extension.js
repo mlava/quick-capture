@@ -1,7 +1,8 @@
-var TodoistAccount, TodoistImportTag, TodoistHeader, key, autoParentUid, autoBlockUid;
+var TodoistAccount, TodoistImportTag, TodoistHeader, key, autoParentUid, autoBlockUid, TodoistLabelId;
 var checkInterval = 0;
 var auto = false;
 var autoBlockUidLength = 0;
+var thisBlock = undefined;
 
 export default {
     onload: ({ extensionAPI }) => {
@@ -126,6 +127,7 @@ export default {
         }
 
         async function importTodoist(auto) {
+            thisBlock = await window.roamAlphaAPI.ui.getFocusedBlock()?.["block-uid"];
             breakme: {
                 if (!extensionAPI.settings.get("uqcrr-token")) {
                     key = "API";
@@ -165,7 +167,7 @@ export default {
                             var key = "label"
                             sendConfigAlert(key);
                         } else {
-                            const TodoistLabelId = extensionAPI.settings.get("uqcrr-label-id");
+                            TodoistLabelId = extensionAPI.settings.get("uqcrr-label-id");
                         }
                     }
                     const TodoistLabelMode = extensionAPI.settings.get("uqcrr-label-mode");
@@ -177,9 +179,6 @@ export default {
                     const TodoistPriority = extensionAPI.settings.get("uqcrr-priority");
 
                     var url = "https://api.todoist.com/rest/v1/tasks?project_id=" + TodoistInboxId + "";
-                    if (TodoistLabelMode == "Label") {
-                        url += "&label_id=" + TodoistLabelId + "";
-                    }
 
                     var myHeaders = new Headers();
                     var bearer = 'Bearer ' + myToken;
@@ -198,22 +197,36 @@ export default {
                     let taskList = [];
                     let subTaskList = [];
                     for await (task of JSON.parse(myTasks)) {
-                        if (task.hasOwnProperty('parent_id')) {
-                            subTaskList.push({ id: task.id, parent_id: task.parent_id, order: task.order, content: task.content });
+                        if (TodoistLabelMode == true) {
+                            if (task.hasOwnProperty("label_ids")) {
+                                for (var i = 0; i < task.label_ids.length; i++) {
+                                    if (task.label_ids[i] == TodoistLabelId) {
+                                        if (task.hasOwnProperty('parent_id')) {
+                                            subTaskList.push({ id: task.id, parent_id: task.parent_id, order: task.order, content: task.content });
+                                        } else {
+                                            taskList.push({ id: task.id, uid: "temp" });
+                                        }
+                                    }
+                                }
+                            }
                         } else {
-                            taskList.push({ id: task.id, uid: "temp" });
+                            if (task.hasOwnProperty('parent_id')) {
+                                subTaskList.push({ id: task.id, parent_id: task.parent_id, order: task.order, content: task.content });
+                            } else {
+                                taskList.push({ id: task.id, uid: "temp" });
+                            }
                         }
                     }
 
                     if (Object.keys(taskList).length > 0) {
                         if (!auto) {
-                            var thisBlock = window.roamAlphaAPI.ui.getFocusedBlock()?.["block-uid"];
                             await window.roamAlphaAPI.updateBlock({
                                 block: {
                                     uid: thisBlock,
-                                    string: TodoistHeader
+                                    string: TodoistHeader.toString()
                                 }
                             });
+                            //await window.roamAlphaAPI.updateBlock({"block": {"uid": thisBlock, "string": TodoistHeader}});
                         } else {
                             // get today's DNP uid
                             var today = new Date();
@@ -283,7 +296,7 @@ export default {
                                         });
                                     } else {
                                         await window.roamAlphaAPI.createBlock({
-                                            location: { "parent-uid": autoBlockUid, order: i+autoBlockUidLength },
+                                            location: { "parent-uid": autoBlockUid, order: i + autoBlockUidLength },
                                             block: { string: itemString, uid }
                                         });
                                     }
@@ -358,7 +371,7 @@ export default {
                                     headers: myHeaders,
                                     redirect: 'follow'
                                 };
-                                await fetch(url, requestOptionsDelete);
+                                //await fetch(url, requestOptionsDelete);
                             }
                         }
                     } else {
