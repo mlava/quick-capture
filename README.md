@@ -8,7 +8,16 @@ Setup is fairly easy, but there are a lot of configuration options so you can ac
 Automatic import of your Quick Capture items 
 - turn on the switch in Roam Depot configuration settings and enjoy automatic sync of new items in your Todoist inbox. Items will be placed in the daily note page with the tag you configure within the settings. 
 
-Combine automatic import with my upcoming Unread Badge extension to receive a visual prompt that there are new items for you to process!
+**NEW**:
+Define actions to take in Todoist after import
+- select either Delete to delete the items from your Todoist inbox, Label to apply a label to the item in Todoist, or Nothing to take no action
+- you can define the label to apply in the Roam Depot config settings
+
+**NEW**:
+Import Todoist labels as Roam Research tags
+- switch this on if you apply labels in Todoist and wish them to be imported with the item and converted to Roam Research tags
+
+Combine automatic import with my Unread Badge extension to receive a visual prompt that there are new items for you to process!
 
 For details of configuration options:
 https://roamresearch.com/#/app/RoamScripts/page/ZMIPifeIp
