@@ -1,4 +1,4 @@
-var TodoistAccount, TodoistImportTag, TodoistHeader, key, autoParentUid, autoBlockUid, TodoistLabelId;
+var TodoistAccount, TodoistImportTag, TodoistHeader, key, autoParentUid, autoBlockUid, TodoistLabelId, TodoistAfterActionLabel, myLabels;
 var checkInterval = 0;
 var auto = false;
 var autoBlockUidLength = 0;
@@ -102,6 +102,24 @@ export default {
                     description: "Import the item priority",
                     action: { type: "switch" },
                 },
+                {
+                    id: "uqcrr-labelsTags",
+                    name: "Import Labels",
+                    description: "Import Todoist labels as Roam Research tags",
+                    action: { type: "switch" },
+                },
+                {
+                    id: "uqcrr-afterImport",
+                    name: "Action after Import",
+                    description: "Delete the item in Todoist, label it in Todoist, or do nothing",
+                    action: { type: "select", items: ["Delete", "Label", "Nothing"] },
+                },
+                {
+                    id: "uqcrr-afterImportLabel",
+                    name: "Todoist Label for after Import",
+                    description: "Label for item in Todoist after Import",
+                    action: { type: "input", placeholder: "Exported_to_Roam" },
+                },
             ]
         };
         extensionAPI.settings.panel.create(config);
@@ -174,16 +192,25 @@ export default {
                     const TodoistOutputTodo = extensionAPI.settings.get("uqcrr-output-todo");
                     const TodoistGetDescription = extensionAPI.settings.get("uqcrr-get-description");
                     const TodoistNoTag = extensionAPI.settings.get("uqcrr-no-tag") || "False";
+                    const TodoistLabelsasTags = extensionAPI.settings.get("uqcrr-labelsTags");
                     const TodoistCreatedDate = extensionAPI.settings.get("uqcrr-created-date");
                     const TodoistDueDates = extensionAPI.settings.get("uqcrr-due-dates");
                     const TodoistPriority = extensionAPI.settings.get("uqcrr-priority");
+                    const TodoistAfterAction = extensionAPI.settings.get("uqcrr-afterImport");
+
+                    if (extensionAPI.settings.get("uqcrr-afterImport") == "Label") {
+                        if (!extensionAPI.settings.get("uqcrr-afterImportLabel")) {
+                            TodoistAfterActionLabel = "Exported_to_Roam";
+                        } else {
+                            TodoistAfterActionLabel = extensionAPI.settings.get("uqcrr-afterImportLabel");
+                        }
+                    }
 
                     var url = "https://api.todoist.com/rest/v1/tasks?project_id=" + TodoistInboxId + "";
 
                     var myHeaders = new Headers();
                     var bearer = 'Bearer ' + myToken;
                     myHeaders.append("Authorization", bearer);
-
                     var requestOptions = {
                         method: 'GET',
                         headers: myHeaders,
@@ -193,9 +220,14 @@ export default {
                     const response = await fetch(url, requestOptions);
                     const myTasks = await response.text();
                     var task;
-
                     let taskList = [];
                     let subTaskList = [];
+
+                    if (TodoistAfterAction == "Label" || TodoistLabelsasTags) {
+                        var labelUrl = "https://api.todoist.com/rest/v2/labels";
+                        const responseLabels = await fetch(labelUrl, requestOptions);
+                        myLabels = await responseLabels.json();
+                    }
                     for await (task of JSON.parse(myTasks)) {
                         if (TodoistLabelMode == true) {
                             if (task.hasOwnProperty("label_ids")) {
@@ -218,15 +250,14 @@ export default {
                         }
                     }
 
+                    var existingItems;
+
                     if (Object.keys(taskList).length > 0) {
                         if (!auto) {
                             await window.roamAlphaAPI.updateBlock({
-                                block: {
-                                    uid: thisBlock,
-                                    string: TodoistHeader.toString()
-                                }
+                                block: { uid: thisBlock, string: TodoistHeader.toString()}
                             });
-                            //await window.roamAlphaAPI.updateBlock({"block": {"uid": thisBlock, "string": TodoistHeader}});
+                            existingItems = await window.roamAlphaAPI.q(`[:find (pull ?page [:node/title :block/string :block/uid {:block/children ...} ]) :where [?page :block/uid "${thisBlock}"] ]`);
                         } else {
                             // get today's DNP uid
                             var today = new Date();
@@ -254,12 +285,25 @@ export default {
                                 });
                                 autoBlockUid = uid;
                             }
+                            existingItems = await window.roamAlphaAPI.q(`[:find (pull ?page [:node/title :block/string :block/uid {:block/children ...} ]) :where [?page :block/uid "${autoBlockUid}"] ]`);
                         }
 
                         for (var i = 0; i < taskList.length; i++) {
                             for await (task of JSON.parse(myTasks)) {
                                 if (taskList[i].id == task.id) {
-                                    // print task
+                                    var matchedItem = false;
+                                    var matchedUid;
+                                    if (existingItems[0][0].hasOwnProperty("children")) {
+                                        var regex = new RegExp("^" + task.content + "", "g");
+                                        for (var m = 0; m < existingItems[0][0].children.length; m++) {
+                                            if (regex.test(existingItems[0][0].children[m].string)) {
+                                                matchedItem = true;
+                                                matchedUid = existingItems[0][0].children[m].uid;
+                                            }
+                                        }
+                                    }
+
+                                    // print item
                                     var itemString = "";
                                     if (TodoistOutputTodo == true) {
                                         itemString += "{{[[TODO]]}} "
@@ -267,6 +311,17 @@ export default {
                                     itemString += "" + task.content + "";
                                     if (TodoistNoTag !== true) {
                                         itemString += " #[[" + TodoistImportTag + "]]";
+                                    }
+                                    if (TodoistLabelsasTags == true) {
+                                        for (var z = 0; z < task.label_ids.length; z++) {
+                                            for (var y = 0; y < myLabels.length; y++) {
+                                                if (task.label_ids[z] == myLabels[y].id) {
+                                                    if (myLabels[y].name != TodoistAfterActionLabel) {
+                                                        itemString += ' #' + myLabels[y].name + '';
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                     if (TodoistCreatedDate == true) {
                                         var createdDate = task.created.split("T");
@@ -289,14 +344,28 @@ export default {
                                     }
 
                                     const uid = window.roamAlphaAPI.util.generateUID();
-                                    if (!auto) {
+                                    if (auto && matchedItem) {
+                                        await window.roamAlphaAPI.updateBlock({
+                                            block: {
+                                                uid: matchedUid,
+                                                string: itemString.toString()
+                                            }
+                                        });
+                                    } else if (auto) {
                                         await window.roamAlphaAPI.createBlock({
-                                            location: { "parent-uid": thisBlock, order: i },
+                                            location: { "parent-uid": autoBlockUid, order: i + autoBlockUidLength },
                                             block: { string: itemString, uid }
+                                        });
+                                    } else if (matchedItem) {
+                                        await window.roamAlphaAPI.updateBlock({
+                                            block: {
+                                                uid: matchedUid,
+                                                string: itemString.toString()
+                                            }
                                         });
                                     } else {
                                         await window.roamAlphaAPI.createBlock({
-                                            location: { "parent-uid": autoBlockUid, order: i + autoBlockUidLength },
+                                            location: { "parent-uid": thisBlock, order: i },
                                             block: { string: itemString, uid }
                                         });
                                     }
@@ -342,7 +411,6 @@ export default {
                                                     location: { "parent-uid": uid, order: j + 1 },
                                                     block: { string: commentString, newBlock }
                                                 });
-
                                             }
                                         }
                                     }
@@ -363,15 +431,35 @@ export default {
                                             });
                                         }
                                     }
-                                }
 
-                                var url = "https://api.todoist.com/rest/v1/tasks/" + task.id + "";
-                                var requestOptionsDelete = {
-                                    method: 'DELETE',
-                                    headers: myHeaders,
-                                    redirect: 'follow'
-                                };
-                                //await fetch(url, requestOptionsDelete);
+                                    var url = "https://api.todoist.com/rest/v2/tasks/" + task.id + "";
+                                    if (TodoistAfterAction == "Delete") {
+                                        var requestOptionsDelete = {
+                                            method: 'DELETE',
+                                            headers: myHeaders,
+                                            redirect: 'follow'
+                                        };
+                                        await fetch(url, requestOptionsDelete);
+                                    } else if (TodoistAfterAction == "Label") {
+                                        myHeaders.append("Content-Type", "application/json");
+                                        var taskcontent = '{"labels": ["' + TodoistAfterActionLabel + '"';
+                                        for (var z = 0; z < task.label_ids.length; z++) {
+                                            for (var y = 0; y < myLabels.length; y++) {
+                                                if (task.label_ids[z] == myLabels[y].id) {
+                                                    taskcontent += ', "' + myLabels[y].name + '"';
+                                                }
+                                            }
+                                        }
+                                        taskcontent += ']}';
+                                        var requestOptionsLabel = {
+                                            method: 'POST',
+                                            headers: myHeaders,
+                                            redirect: 'follow',
+                                            body: taskcontent
+                                        };
+                                        await fetch(url, requestOptionsLabel);
+                                    }
+                                }
                             }
                         }
                     } else {
