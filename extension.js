@@ -206,7 +206,7 @@ export default {
                         }
                     }
 
-                    var url = "https://api.todoist.com/rest/v1/tasks?project_id=" + TodoistInboxId + "";
+                    var url = "https://api.todoist.com/rest/v2/tasks?project_id=" + TodoistInboxId + "";
 
                     var myHeaders = new Headers();
                     var bearer = 'Bearer ' + myToken;
@@ -381,7 +381,7 @@ export default {
 
                                     // print comments
                                     if (task.comment_count > 0) {
-                                        var url = "https://api.todoist.com/rest/v1/comments?task_id=" + task.id + "";
+                                        var url = "https://api.todoist.com/rest/v2/comments?task_id=" + task.id + "";
                                         const response = await fetch(url, requestOptions);
                                         const myComments = await response.text();
                                         let commentsJSON = await JSON.parse(myComments);
