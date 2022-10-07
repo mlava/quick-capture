@@ -112,7 +112,7 @@ export default {
                     id: "uqcrr-afterImport",
                     name: "Action after Import",
                     description: "Delete the item in Todoist, label it in Todoist, or do nothing",
-                    action: { type: "select", items: ["Delete", "Label", "Nothing"] },
+                    action: { type: "select", items: ["Nothing", "Delete", "Label"] },
                 },
                 {
                     id: "uqcrr-afterImportLabel",
@@ -206,7 +206,7 @@ export default {
                         }
                     }
 
-                    var url = "https://api.todoist.com/rest/v2/tasks?project_id=" + TodoistInboxId + "";
+                    var url = "https://api.todoist.com/rest/v1/tasks?project_id=" + TodoistInboxId + "";
 
                     var myHeaders = new Headers();
                     var bearer = 'Bearer ' + myToken;
