@@ -272,10 +272,18 @@ export default {
                                     if (results[0][0].children[i].string == TodoistHeader) {
                                         var definitions = results[0][0]?.children[i];
                                         autoBlockUid = definitions.uid;
+                                        if (definitions.hasOwnProperty("children") && definitions.children.length > 0) {
+                                            autoBlockUidLength = definitions.children.length;
+                                        }
                                     }
                                 }
-                                if (definitions.hasOwnProperty("children") && definitions.children.length > 0) {
-                                    autoBlockUidLength = definitions.children.length;
+                                if (autoBlockUid == undefined || autoBlockUid == null) {
+                                    const uid = window.roamAlphaAPI.util.generateUID();
+                                    await window.roamAlphaAPI.createBlock({
+                                        location: { "parent-uid": autoParentUid, order: 9999 },
+                                        block: { string: TodoistHeader, uid }
+                                    });
+                                    autoBlockUid = uid;
                                 }
                             } else { // there isn't a QC header on this date yet, so create one
                                 const uid = window.roamAlphaAPI.util.generateUID();
@@ -293,7 +301,7 @@ export default {
                                 if (taskList[i].id == task.id) {
                                     var matchedItem = false;
                                     var matchedUid;
-                                    if (existingItems[0][0].hasOwnProperty("children")) {
+                                    if (existingItems.length > 0 && existingItems[0][0].hasOwnProperty("children")) {
                                         var regex = new RegExp("^" + task.content + "", "g");
                                         for (var m = 0; m < existingItems[0][0].children.length; m++) {
                                             if (regex.test(existingItems[0][0].children[m].string)) {
@@ -472,7 +480,12 @@ export default {
         }
 
         async function autoDL() {
-            var checkEveryMinutes = extensionAPI.settings.get("uqcrr-auto-time");
+            const regex = /^\d{1,2}$/;
+            if (regex.test(extensionAPI.settings.get("uqcrr-auto-time"))) {
+                var checkEveryMinutes = extensionAPI.settings.get("uqcrr-auto-time");
+            } else {
+                var checkEveryMinutes = "15";
+            }
             setTimeout(async () => {
                 await importTodoist(auto);
                 try { if (checkInterval > 0) clearInterval(checkInterval) } catch (e) { }
