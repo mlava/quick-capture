@@ -275,6 +275,7 @@ export default {
                                 });
                                 autoBlockUid = uid;
                             }
+                            autoBlockUidLength = await window.roamAlphaAPI.q(`[:find ?c :where [?e :block/children ?c] [?e :block/uid "${autoBlockUid}"]]`).length; //with thanks to David Vargas https://github.com/dvargas92495/roam-client/blob/main/src/queries.ts#L301
                             existingItems = await window.roamAlphaAPI.q(`[:find (pull ?page [:node/title :block/string :block/uid {:block/children ...} ]) :where [?page :block/uid "${autoBlockUid}"] ]`);
                         }
 
