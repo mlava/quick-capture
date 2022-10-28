@@ -265,27 +265,9 @@ export default {
                             var mm = String(today.getMonth() + 1).padStart(2, '0');
                             var yyyy = today.getFullYear();
                             autoParentUid = mm + '-' + dd + '-' + yyyy;
-                            // find QC header
-                            var results = await window.roamAlphaAPI.q(`[:find (pull ?page [:node/title :block/string :block/uid {:block/children ...} ]) :where [?page :block/uid "${autoParentUid}"] ]`);
-                            if (results[0][0].hasOwnProperty("children") && results[0][0].children.length > 0) {
-                                for (var i = 0; i < results[0][0].children.length; i++) {
-                                    if (results[0][0].children[i].string == TodoistHeader) {
-                                        var definitions = results[0][0]?.children[i];
-                                        autoBlockUid = definitions.uid;
-                                        if (definitions.hasOwnProperty("children") && definitions.children.length > 0) {
-                                            autoBlockUidLength = definitions.children.length;
-                                        }
-                                    }
-                                }
-                                if (autoBlockUid == undefined || autoBlockUid == null) {
-                                    const uid = window.roamAlphaAPI.util.generateUID();
-                                    await window.roamAlphaAPI.createBlock({
-                                        location: { "parent-uid": autoParentUid, order: 9999 },
-                                        block: { string: TodoistHeader, uid }
-                                    });
-                                    autoBlockUid = uid;
-                                }
-                            } else { // there isn't a QC header on this date yet, so create one
+                            // find or create QC header
+                            autoBlockUid = await window.roamAlphaAPI.q(`[:find ?u :where [?b :block/page ?p] [?b :block/uid ?u] [?b :block/string "${TodoistHeader}"] [?p :block/uid "${autoParentUid}"]]`)?.[0]?.[0];
+                            if (autoBlockUid == undefined) {
                                 const uid = window.roamAlphaAPI.util.generateUID();
                                 await window.roamAlphaAPI.createBlock({
                                     location: { "parent-uid": autoParentUid, order: 9999 },
