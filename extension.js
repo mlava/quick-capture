@@ -206,11 +206,12 @@ export default {
                         }
                     }
 
-                    var url = "https://api.todoist.com/rest/v1/tasks?project_id=" + TodoistInboxId + "";
+                    var url = "https://api.todoist.com/rest/v2/tasks?project_id=" + TodoistInboxId + "";
 
                     var myHeaders = new Headers();
                     var bearer = 'Bearer ' + myToken;
                     myHeaders.append("Authorization", bearer);
+                    myHeaders.append("Content-Type", "application/json");
                     var requestOptions = {
                         method: 'GET',
                         headers: myHeaders,
@@ -230,9 +231,9 @@ export default {
                     }
                     for await (task of JSON.parse(myTasks)) {
                         if (TodoistLabelMode == true) {
-                            if (task.hasOwnProperty("label_ids")) {
-                                for (var i = 0; i < task.label_ids.length; i++) {
-                                    if (task.label_ids[i] == TodoistLabelId) {
+                            if (task.hasOwnProperty("labels")) {
+                                for (var i = 0; i < task.labels.length; i++) {
+                                    if (task.labels[i] == TodoistLabelId) {
                                         if (task.hasOwnProperty('parent_id')) {
                                             subTaskList.push({ id: task.id, parent_id: task.parent_id, order: task.order, content: task.content });
                                         } else {
@@ -242,7 +243,7 @@ export default {
                                 }
                             }
                         } else {
-                            if (task.hasOwnProperty('parent_id')) {
+                            if (task.hasOwnProperty('parent_id') && task.parent_id != null) {
                                 subTaskList.push({ id: task.id, parent_id: task.parent_id, order: task.order, content: task.content });
                             } else {
                                 taskList.push({ id: task.id, uid: "temp" });
