@@ -232,9 +232,10 @@ export default {
                     for await (task of JSON.parse(myTasks)) {
                         if (TodoistLabelMode == true) {
                             if (task.hasOwnProperty("labels")) {
+                                console.info(task)
                                 for (var i = 0; i < task.labels.length; i++) {
                                     if (task.labels[i] == TodoistLabelId) {
-                                        if (task.hasOwnProperty('parent_id')) {
+                                        if (task.hasOwnProperty('parent_id') && task.parent_id != null) {
                                             subTaskList.push({ id: task.id, parent_id: task.parent_id, order: task.order, content: task.content });
                                         } else {
                                             taskList.push({ id: task.id, uid: "temp" });
