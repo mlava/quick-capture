@@ -4,16 +4,19 @@ Email, voice assistant, apps - they all speak to Todoist. This integration works
 
 Setup is fairly easy, but there are a lot of configuration options so you can achieve fine-grained control of your imports.
 
-**NEW**:
+
+**IMPORTANT:**
+A recent change in the Todoist API means that the way we define which label to download if you choose Label Mode must change. If you're using Label Mode, please place the label NAME in the settings at Todoist Label Name (optional) rather than the ID.
+
+
+Recent features:
 Automatic import of your Quick Capture items 
 - turn on the switch in Roam Depot configuration settings and enjoy automatic sync of new items in your Todoist inbox. Items will be placed in the daily note page with the tag you configure within the settings. 
 
-**NEW**:
 Define actions to take in Todoist after import
 - select either Delete to delete the items from your Todoist inbox, Label to apply a label to the item in Todoist, or Nothing to take no action
 - you can define the label to apply in the Roam Depot config settings
 
-**NEW**:
 Import Todoist labels as Roam Research tags
 - switch this on if you apply labels in Todoist and wish them to be imported with the item and converted to Roam Research tags
 
