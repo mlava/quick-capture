@@ -62,8 +62,8 @@ export default {
                 },
                 {
                     id: "uqcrr-label-id",
-                    name: "Todoist Label ID (optional)",
-                    description: "Define the Todoist label to import",
+                    name: "Todoist Label Name (optional)",
+                    description: "Define the Todoist label to import (label name)",
                     action: { type: "input", placeholder: "" },
                 },
                 {
