@@ -304,10 +304,10 @@ export default {
                                     if (TodoistNoTag !== true) {
                                         itemString += " #[[" + TodoistImportTag + "]]";
                                     }
-                                    if (TodoistLabelsasTags == true) {
-                                        for (var z = 0; z < task.label_ids.length; z++) {
+                                    if (TodoistLabelsasTags == true && task.labels.length > 0) {
+                                        for (var z = 0; z < task.labels.length; z++) {
                                             for (var y = 0; y < myLabels.length; y++) {
-                                                if (task.label_ids[z] == myLabels[y].id) {
+                                                if (task.labels[z] == myLabels[y].name) {
                                                     if (myLabels[y].name != TodoistAfterActionLabel) {
                                                         itemString += ' #' + myLabels[y].name + '';
                                                     }
@@ -316,10 +316,10 @@ export default {
                                         }
                                     }
                                     if (TodoistCreatedDate == true) {
-                                        var createdDate = task.created.split("T");
+                                        var createdDate = task.created_at.split("T");
                                         itemString += " Created: [[" + convertToRoamDate(createdDate[0]) + "]]";
                                     }
-                                    if (TodoistDueDates == true && task.hasOwnProperty('due')) {
+                                    if (TodoistDueDates == true && task.due != null) {
                                         itemString += " Due: [[" + convertToRoamDate(task.due.date) + "]]";
                                     }
                                     if (TodoistPriority == true) {
@@ -435,9 +435,9 @@ export default {
                                     } else if (TodoistAfterAction == "Label") {
                                         myHeaders.append("Content-Type", "application/json");
                                         var taskcontent = '{"labels": ["' + TodoistAfterActionLabel + '"';
-                                        for (var z = 0; z < task.label_ids.length; z++) {
+                                        for (var z = 0; z < task.labels.length; z++) {
                                             for (var y = 0; y < myLabels.length; y++) {
-                                                if (task.label_ids[z] == myLabels[y].id) {
+                                                if (task.labels[z] == myLabels[y].name) {
                                                     taskcontent += ', "' + myLabels[y].name + '"';
                                                 }
                                             }
