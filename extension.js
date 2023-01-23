@@ -109,6 +109,12 @@ export default {
                     action: { type: "switch" },
                 },
                 {
+                    id: "uqcrr-labelsRename",
+                    name: "Replace underscore in labels",
+                    description: "Convert '_' to ' ' in imported labels",
+                    action: { type: "switch" },
+                },
+                {
                     id: "uqcrr-afterImport",
                     name: "Action after Import",
                     description: "Delete the item in Todoist, label it in Todoist, or do nothing",
@@ -193,6 +199,7 @@ export default {
                     const TodoistGetDescription = extensionAPI.settings.get("uqcrr-get-description");
                     const TodoistNoTag = extensionAPI.settings.get("uqcrr-no-tag") || "False";
                     const TodoistLabelsasTags = extensionAPI.settings.get("uqcrr-labelsTags");
+                    const TodoistLabelsRename = extensionAPI.settings.get("uqcrr-labelsRename");                    
                     const TodoistCreatedDate = extensionAPI.settings.get("uqcrr-created-date");
                     const TodoistDueDates = extensionAPI.settings.get("uqcrr-due-dates");
                     const TodoistPriority = extensionAPI.settings.get("uqcrr-priority");
@@ -309,7 +316,12 @@ export default {
                                             for (var y = 0; y < myLabels.length; y++) {
                                                 if (task.labels[z] == myLabels[y].name) {
                                                     if (myLabels[y].name != TodoistAfterActionLabel) {
-                                                        itemString += ' #' + myLabels[y].name + '';
+                                                        if (TodoistLabelsRename) {
+                                                            itemString += ' #[[' + myLabels[y].name.replaceAll("_", " ") + ']]';
+                                                        } else {
+                                                            itemString += ' #' + myLabels[y].name + '';
+                                                        }
+                                                        
                                                     }
                                                 }
                                             }
