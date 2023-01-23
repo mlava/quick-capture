@@ -4,10 +4,11 @@ Email, voice assistant, apps - they all speak to Todoist. This integration works
 
 Setup is fairly easy, but there are a lot of configuration options so you can achieve fine-grained control of your imports.
 
+**NEW:**
+1. Switch in settings to allow rename of Todoist labels if importing labels is selected. As Todoist doesn't allow spaces in label names, users usually use underscore (_). This switch will replace the _ with a space and wrap in #[[]] so that it works as a RR tag.
 
 **IMPORTANT:**
 A recent change in the Todoist API means that the way we define which label to download if you choose Label Mode must change. If you're using Label Mode, please place the label NAME in the settings at Todoist Label Name (optional) rather than the ID.
-
 
 Recent features:
 Automatic import of your Quick Capture items 
