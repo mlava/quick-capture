@@ -477,10 +477,9 @@ export default {
 
         async function autoDL() {
             const regex = /^\d{1,2}$/;
+            var checkEveryMinutes = 15;
             if (regex.test(extensionAPI.settings.get("uqcrr-auto-time"))) {
-                var checkEveryMinutes = extensionAPI.settings.get("uqcrr-auto-time");
-            } else {
-                var checkEveryMinutes = "15";
+                checkEveryMinutes = parseInt(extensionAPI.settings.get("uqcrr-auto-time"));
             }
             setTimeout(async () => {
                 await importTodoist(auto);
