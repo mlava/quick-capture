@@ -394,19 +394,19 @@ export default {
                                         for (var j = 0; j < commentsJSON.length; j++) {
                                             commentString = "";
                                             if (commentsJSON[j].hasOwnProperty('attachment') && TodoistAccount == "Premium") {
-                                                if (commentsJSON[j].attachment.file_type == "application/pdf") {
-                                                    commentString = "{{pdf: " + commentsJSON[j].attachment.file_url + "}}";
-                                                } else if (commentsJSON[j].attachment.file_type == "image/jpeg" || commentsJSON[j].attachment.file_type == "image/png") {
-                                                    commentString = "![](" + commentsJSON[j].attachment.file_url + ")";
+                                                if (commentsJSON[j].attachment?.file_type == "application/pdf") {
+                                                    commentString = "{{pdf: " + commentsJSON[j].attachment?.file_url + "}}";
+                                                } else if (commentsJSON[j].attachment?.file_type == "image/jpeg" || commentsJSON[j].attachment?.file_type == "image/png") {
+                                                    commentString = "![](" + commentsJSON[j].attachment?.file_url + ")";
                                                 } else {
-                                                    commentString = "" + commentsJSON[j].content + "";
+                                                    commentString = "" + commentsJSON[j]?.content + "";
                                                 }
                                             } else if (commentsJSON[j].hasOwnProperty('attachment')) {
-                                                if (commentsJSON[j].attachment.file_type == "text/html") {
-                                                    commentString = "" + commentsJSON[j].content + " [Email Body](" + commentsJSON[j].attachment.file_url + ")";
+                                                if (commentsJSON[j].attachment?.file_type == "text/html") {
+                                                    commentString = "" + commentsJSON[j]?.content + " [Email Body](" + commentsJSON[j].attachment?.file_url + ")";
                                                 }
                                             } else {
-                                                commentString = "" + commentsJSON[j].content + "";
+                                                commentString = "" + commentsJSON[j]?.content + "";
                                             }
 
                                             if (commentString.length > 0) {
