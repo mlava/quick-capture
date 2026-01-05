@@ -1,35 +1,117 @@
-Quick Capture for Roam Research allows you to use the power of Todoist as a quick capture gateway, and then import items into your Roam Research graph.
+# Quick Capture for Roam Research
 
-Email, voice assistant, apps - they all speak to Todoist. This integration works with both Free and Todoist Premium accounts.
+**Quick Capture for Roam Research** lets you use **Todoist as a universal inbox** and then import captured items directly into your Roam graph.
 
-Setup is fairly easy, but there are a lot of configuration options so you can achieve fine-grained control of your imports.
+Email, voice assistants, mobile apps, browser extensions — they all speak Todoist.  
+This extension turns Todoist into a **reliable capture gateway** for Roam.
 
-**NEW:**
-1. Switch in settings to allow rename of Todoist labels if importing labels is selected. As Todoist doesn't allow spaces in label names, users usually use underscore (_). This switch will replace the _ with a space and wrap in #[[]] so that it works as a RR tag.
+Works with **Todoist Free and Premium** accounts.
 
-**IMPORTANT:**
-A recent change in the Todoist API means that the way we define which label to download if you choose Label Mode must change. If you're using Label Mode, please place the label NAME in the settings at Todoist Label Name (optional) rather than the ID.
+---
 
-Recent features:
-Automatic import of your Quick Capture items 
-- turn on the switch in Roam Depot configuration settings and enjoy automatic sync of new items in your Todoist inbox. Items will be placed in the daily note page with the tag you configure within the settings. 
+## What this extension does
 
-Define actions to take in Todoist after import
-- select either Delete to delete the items from your Todoist inbox, Label to apply a label to the item in Todoist, or Nothing to take no action
-- you can define the label to apply in the Roam Depot config settings
+- Imports tasks from your Todoist inbox (or filtered subset)
+- Creates clean, structured Roam blocks
+- Supports **manual import** and **automatic background sync**
+- Prevents duplicate imports using invisible block metadata
+- Optionally performs actions in Todoist *after* import
 
-Import Todoist labels as Roam Research tags
-- switch this on if you apply labels in Todoist and wish them to be imported with the item and converted to Roam Research tags
+Setup is straightforward, but the extension offers **fine-grained configuration** so you can tailor imports to your workflow.
 
-Combine automatic import with my Unread Badge extension to receive a visual prompt that there are new items for you to process!
+---
 
-For details of configuration options:
+## ⚠️ Important: Todoist API change (Label Mode)
+
+A recent change in the Todoist API affects how labels are handled.
+
+If you enable **Label Mode**:
+
+> **You must enter the LABEL NAME (not the label ID)**  
+> in the setting **“Todoist Label Name (optional)”**
+
+Older versions required a label ID. This is no longer supported by the API.
+
+---
+
+## ✨ What’s new (major update)
+
+- Robust handling of Todoist API changes
+  - Automatic fallback from legacy API (v1) to REST API (v2)
+- Safer background imports (no duplicate tasks)
+- More reliable comment and attachment imports
+- Improved automatic Daily Notes Page (DNP) placement
+- Cleaner command-palette integration (no manual unload cleanup required)
+
+---
+
+## Key features
+
+### Automatic import
+- Enable **Automatic Import** in Roam Depot settings
+- New Todoist items are periodically synced into today’s Daily Notes Page
+- Frequency is configurable (in minutes)
+
+### Post-import actions in Todoist
+Choose what happens to tasks after they’re imported:
+- **Nothing** – leave the task untouched
+- **Delete** – remove it from Todoist
+- **Label** – apply a label (configurable)
+
+### Import Todoist labels as Roam tags
+- Convert Todoist labels into Roam `#[[tags]]`
+- Optionally replace underscores (`_`) with spaces
+
+### Optional metadata imports
+Enable or disable:
+- Task description
+- Created date
+- Due date
+- Priority
+- Comments and attachments (Premium accounts get richer attachment handling)
+
+### Idempotent imports (no duplicates)
+- Imported tasks are tagged invisibly with their Todoist ID
+- Re-running the importer updates existing blocks instead of duplicating them
+
+---
+
+## Using the extension
+
+### Manual import
+1. Focus a block in Roam
+2. Open the Command Palette (`Ctrl-P` / `Cmd-P`)
+3. Select **“Import Quick Capture items from Todoist”**
+
+Tasks will be inserted under the focused block.
+
+### Automatic import
+- Enable **Automatic Import** in settings
+- Items will be added under a configured header on today’s DNP
+
+---
+
+## Setup instructions
+
+### Retrieve your Todoist API token
+Watch this short walkthrough:  
+https://www.loom.com/share/d8e4d6d3c31c43aca3e2ba49914787c3
+
+### Retrieve your Todoist inbox ID
+Watch this walkthrough:  
+https://www.loom.com/share/35816b92f0644c088f19c9bb471bd529
+
+---
+
+## Configuration reference
+
+A full walkthrough of all configuration options is available here:  
 https://roamresearch.com/#/app/RoamScripts/page/ZMIPifeIp
 
-Retrieve your Todoist API token:
-  https://www.loom.com/share/d8e4d6d3c31c43aca3e2ba49914787c3
-  
-Retrieve your Todoist inbox id:
-  https://www.loom.com/share/35816b92f0644c088f19c9bb471bd529
+---
 
-Trigger by opening Command Palette (CTRL-P) and then select 'Import Quick Capture items from Todoist'.
+## Tips
+
+- Combine this extension with an **Unread / Inbox badge** extension for a lightweight “processing prompt”
+- Use Todoist as your capture layer, and Roam as your thinking layer
+- Label Mode is ideal if you want multiple capture streams (e.g. `inbox`, `reading`, `ideas`)
